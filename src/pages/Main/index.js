@@ -41,36 +41,52 @@ export default class Main extends Component {
     handleSubmit = async (e) => {
         e.preventDefault();
 
-        this.setState({ loading: true });
+        // eslint-disable-next-line react/no-unused-state
+        this.setState({ loading: true, error: false });
 
-        // infromação do fomulario
-        const { newRepo, repositories } = this.state;
-        // preenche a url com os dados informados da url
-        const response = await api.get(`/repos/${newRepo}`);
+        try {
+            // infromação do fomulario
+            const { newRepo, repositories } = this.state;
 
-        // console.log(response.data);
+            // eslint-disable-next-line no-throw-literal
+            if (newRepo === '') throw 'Você precisa indicar um repositório';
 
-        // resultado da api
-        const data = {
-            name: response.data.full_name,
-        };
-        // crai um novo vetor baseado no que ja existe no state, conceito de imutabilidade
-        this.setState({
-            repositories: [...repositories, data],
-            newRepo: '',
-            loading: false,
-        });
+            const hasRepo = repositories.find((r) => r.name === newRepo);
+
+            // eslint-disable-next-line no-throw-literal
+            if (hasRepo) throw 'Repositório duplicado';
+            // preenche a url com os dados informados da url
+            const response = await api.get(`/repos/${newRepo}`);
+
+            // console.log(response.data);
+
+            // resultado da api
+            const data = {
+                name: response.data.full_name,
+            };
+            // crai um novo vetor baseado no que ja existe no state, conceito de imutabilidade
+            this.setState({
+                repositories: [...repositories, data],
+                newRepo: '',
+                loading: false,
+            });
+        } catch (error) {
+            // eslint-disable-next-line react/no-unused-state
+            this.setState({ error: true });
+        } finally {
+            this.setState({ loading: false });
+        }
     };
 
     render() {
-        const { newRepo, loading, repositories } = this.state;
+        const { newRepo, loading, repositories, error } = this.state;
         return (
             <Container>
                 <h1>
                     <FaGithubAlt />
                     Repositórios
                 </h1>
-                <Form onSubmit={this.handleSubmit}>
+                <Form onSubmit={this.handleSubmit} error={error}>
                     <input
                         type="text"
                         placeholder="Adicionar Repositorio"
